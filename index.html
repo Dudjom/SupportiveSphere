@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>动态地球动画</title>
+    <title>支持星球,允许且支持,SupportPlanet</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -31,7 +31,7 @@
         // 在创建地球后，添加3D文字
         const loader = new THREE.FontLoader();
         loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-            const textGeometry = new THREE.TextGeometry('Support Planet', {
+            const textGeometry = new THREE.TextGeometry('Support Planet 支持星球', {
                 font: font,
                 size: 1,
                 height: 0.2,
@@ -110,6 +110,43 @@
             animateConnection();
         });
 
+        
+        // 添加闪烁动画函数
+        function flashRandomPoints() {
+            if (points.length < 3) return;
+            
+            // 随机选择3个点
+            const selectedPoints = new Set();
+            while (selectedPoints.size < 3) {
+                const randomIndex = Math.floor(Math.random() * points.length);
+                selectedPoints.add(points[randomIndex]);
+            }
+            
+            // 使选中的点闪烁
+            selectedPoints.forEach(point => {
+                // 保存原始颜色
+                const originalColor = point.material.color.clone();
+                
+                // 设置闪烁颜色
+                point.material.color.setHex(0xff0000); // 红色
+                
+                // 1秒后恢复原始颜色
+                setTimeout(() => {
+                    point.material.color.copy(originalColor);
+                }, 1000);
+            });
+            
+            // 每2秒重复闪烁效果
+            setTimeout(flashRandomPoints, 2000);
+        }
+
+        // 在点创建完成后启动闪烁效果
+        textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', texture => {
+            // ... 原有的点创建代码 ...
+            
+            // 在所有点创建完成后，启动闪烁效果
+            flashRandomPoints();
+        });
         // // 创建弧线
         // function createArcLine(startPoint, endPoint) {
         //     const points = [];
