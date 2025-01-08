@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>动态地球动画</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+    <script>
+        // 初始化场景、相机和渲染器
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // 创建地球
+        const earthGeometry = new THREE.SphereGeometry(5, 32, 32);
+        const earthMaterial = new THREE.MeshPhongMaterial({
+            map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+            bumpMap: new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg'),
+            bumpScale: 0.05,
+        });
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        scene.add(earth);
+
+        // 在创建地球后，添加3D文字
+        const loader = new THREE.FontLoader();
+        loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
+            const textGeometry = new THREE.TextGeometry('Support Planet', {
+                font: font,
+                size: 1,
+                height: 0.2,
+                curveSegments: 12,
+                bevelEnabled: false
+            });
+            
+            const textMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 0.5
+            });
+            
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textGeometry.computeBoundingBox();
+            const centerOffset = -0.5 * (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x);
+            textMesh.position.set(centerOffset, 8, 0);
+            scene.add(textMesh);
+        });
+
+        // 添加环境光和平行光
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        let points = [];
+        // 加载纹理并创建点
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', texture => {
+            // 创建临时canvas分析纹理
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = texture.image.width;
+            canvas.height = texture.image.height;
+            context.drawImage(texture.image, 0, 0);
+            
+            const pointsCount = 50;
+            let attempts = 0;
+            const maxAttempts = 1000;
+            
+            for(let i = 0; i < pointsCount && attempts < maxAttempts;) {
+                const phi = Math.random() * Math.PI * 2;
+                const theta = Math.random() * Math.PI;
+                
+                // 转换为UV坐标
+                const u = phi / (2 * Math.PI);
+                const v = theta / Math.PI;
+                
+                // 获取像素数据
+                const x = Math.floor(u * canvas.width);
+                const y = Math.floor(v * canvas.height);
+                const pixel = context.getImageData(x, y, 1, 1).data;
+                
+                // 计算亮度
+                const brightness = (pixel[0] + pixel[1] + pixel[2]) / 3;
+                
+                if (brightness > 60) {
+                    const radius = 5;
+                    const x = radius * Math.sin(theta) * Math.cos(phi);
+                    const y = radius * Math.sin(theta) * Math.sin(phi);
+                    const z = radius * Math.cos(theta);
+                    
+                    const pointGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+                    const pointMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+                    const point = new THREE.Mesh(pointGeometry, pointMaterial);
+                    point.position.set(x, y, z);
+                    earth.add(point);
+                    points.push(point);
+                    i++;
+                }
+                attempts++;
+            }
+            // 开始连接动画
+            animateConnection();
+        });
+
+        // // 创建弧线
+        // function createArcLine(startPoint, endPoint) {
+        //     const points = [];
+        //     const startWorldPos = startPoint.getWorldPosition(new THREE.Vector3());
+        //     const endWorldPos = endPoint.getWorldPosition(new THREE.Vector3());
+        //     const midPoint = new THREE.Vector3().addVectors(startWorldPos, endWorldPos).multiplyScalar(0.5);
+        //     midPoint.normalize().multiplyScalar(7);
+
+        //     for(let i = 0; i <= 20; i++) {
+        //         const t = i / 20;
+        //         const point = new THREE.Vector3();
+        //         point.x = startWorldPos.x * (1 - t) * (1 - t) + midPoint.x * 2 * (1 - t) * t + endWorldPos.x * t * t;
+        //         point.y = startWorldPos.y * (1 - t) * (1 - t) + midPoint.y * 2 * (1 - t) * t + endWorldPos.y * t * t;
+        //         point.z = startWorldPos.z * (1 - t) * (1 - t) + midPoint.z * 2 * (1 - t) * t + endWorldPos.z * t * t;
+        //         points.push(point);
+        //     }
+
+        //     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        //     const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff });
+        //     return new THREE.Line(lineGeometry, lineMaterial);
+        // }
+
+        // // 动画函数
+        // let currentPointIndex = 0;
+        // const activeLines = new Set();//用于跟踪活动的线条
+
+        // function animateConnection() {
+        //     if (points.length < 2) return;
+            
+        //     const startPoint = points[currentPointIndex];
+        //     const nextPointIndex = (currentPointIndex + 1) % points.length;
+        //     const endPoint = points[nextPointIndex];
+
+        //     const arcLine = createArcLine(startPoint, endPoint);
+        //     earth.add(arcLine);
+        //     activeLines.add(arcLine);
+
+        //     gsap.to(endPoint.material.color, {
+        //         r: 1,
+        //         g: 0,
+        //         b: 0,
+        //         duration: 0.5,
+        //         yoyo: true,
+        //         repeat: 1
+        //     });
+
+        //     setTimeout(() => {
+        //         if (activeLines.zise > 3){
+        //             const oldestLine = Array.from(activeLines)[0];
+        //             earth.remove(oldestLine);
+        //             activeLines.delete(oldestLine);
+        //         }
+        //     }, 2000);
+
+        //     currentPointIndex = nextPointIndex;
+        //     setTimeout(animateConnection, 2000); //缩短动画间隔以便看到更多重叠的线条
+        // }
+
+        // 设置相机位置
+        camera.position.z = 15;
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            earth.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+
+        // 启动动画
+        animate();
+
+        // 窗口大小调整
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+        </script>
+        <div style="
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        ">
+            <h3 style="margin: 0 0 10px 0;">感谢您为人类提供了更有利的支持社区</h3>
+            <button style="
+                padding: 10px 20px;
+                background: #00ffff;
+                border: none;
+                border-radius: 5px;
+                color: black;
+                font-size: 16px;
+                cursor: pointer;
+                transition: all 0.3s;
+            " onmouseover="this.style.backgroundColor='#66ffff'" 
+               onmouseout="this.style.backgroundColor='#00ffff'">
+                赞助支持
+            </button>
+        </div>
+    </body>
+</body>
+</html>
