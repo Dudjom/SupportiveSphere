@@ -30,8 +30,8 @@
 
         // 在创建地球后，添加3D文字
         const loader = new THREE.FontLoader();
-        loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-            const textGeometry = new THREE.TextGeometry('Support Planet 支持星球', {
+        loader.load('https://cdn.jsdelivr.net/npm/three/examples/fonts/optimer_regular.typeface.json', function(font) {
+            const textGeometry1 = new THREE.TextGeometry('Support Planet', {
                 font: font,
                 size: 1,
                 height: 0.2,
@@ -39,17 +39,33 @@
                 bevelEnabled: false
             });
             
+            // 创建HTML元素显示中文
+            const textDiv = document.createElement('div');
+            textDiv.style.position = 'fixed';
+            textDiv.style.top = '110px';
+            textDiv.style.width = '100%';
+            textDiv.style.textAlign = 'center';
+            textDiv.style.color = '#00ffff';
+            textDiv.style.fontSize = '42px';
+            textDiv.style.textShadow = '0 0 10px #00ffff';
+            textDiv.style.zIndex = '1000';
+            textDiv.innerHTML = '支持星球';
+            document.body.appendChild(textDiv);
+            
             const textMaterial = new THREE.MeshPhongMaterial({ 
                 color: 0x00ffff,
                 emissive: 0x00ffff,
                 emissiveIntensity: 0.5
             });
             
-            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            textGeometry.computeBoundingBox();
-            const centerOffset = -0.5 * (textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x);
-            textMesh.position.set(centerOffset, 8, 0);
-            scene.add(textMesh);
+            const textMesh1 = new THREE.Mesh(textGeometry1, textMaterial);
+            
+            textGeometry1.computeBoundingBox();
+            const centerOffset1 = -0.5 * (textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x);
+            
+            textMesh1.position.set(centerOffset1, 9, 0);
+            
+            scene.add(textMesh1);
         });
 
         // 添加环境光和平行光
