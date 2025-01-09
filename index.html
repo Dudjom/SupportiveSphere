@@ -5,9 +5,86 @@
     <style>
         body { margin: 0; }
         canvas { display: block; }
+        .social-link {
+            color:#00ffff;
+            text-decoration: none;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .social-link:hover{
+            color: #66ffff;
+            transform: scale(1,1);
+        }
+        .social-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
+    <div style="
+        position: fixed;
+        top: 15%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #00ffff;
+        z-index: 1000;
+        text-shadow: 0 0 10px #00ffff;
+        pointer-events: none;
+    ">
+        <div style="
+            font-size: 36px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        ">Supportive Sphere</div>
+        <div style="
+            font-size: 42px;
+            font-weight: bold;
+        ">支持星球</div>
+    </div>
+    <div style="
+        position: fixed;
+        left: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #00ffff;
+        text-shadow: 0 0 10px #00ffff;
+        z-index: 1000;
+        text-align: right;
+    ">
+        <h3 style="margin-bottom: 20px; font-size: 18px;">加入我们的社区<br>为他人提供允许与支持</h3>
+        <a href="https://discord.gg/" class="social-link" target="_blank">
+            <i class="fab fa-discord social-icon"></i>
+            <span>Discord</span>
+        </a>
+    </div>
+    <div style="
+        position: fixed;
+        right: 50px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #00ffff;
+        text-shadow: 0 0 10px #00ffff;
+        z-index: 1000;
+        text-align: left;
+    ">
+        <h3 style="margin-bottom: 20px; font-size: 18px;">通过媒体了解我们更多</h3>
+        <a href="https://youtube.com/" class="social-link" target="_blank">
+            <i class="fab fa-youtube social-icon"></i>
+            <span>YouTube频道</span>
+        </a>
+        <a href="https://x.com/" class="social-link" target="_blank">
+            <i class="fab fa-x-twitter social-icon"></i>
+            <span>X.com</span>
+        </a>
+        <a href="https://xiaohongshu.com/" class="social-link" target="_blank"></a>
+            <i class="fab fa-book social-icon"></i>
+            <span>小红书</span>
+        </a>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
     <script>
@@ -18,6 +95,75 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
+        // 在创建地球之前添加星空背景
+        function createStarField() {
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsMaterial = new THREE.PointsMaterial({
+                color: 0xFFFFFF,
+                size: 0.1,
+                transparent: true,
+                opacity: 0.8,
+                sizeAttenuation: true
+            });
+
+            const starsVertices = [];
+            for(let i = 0; i < 10000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = (Math.random() - 0.5) * 2000;
+                starsVertices.push(x, y, z);
+            }
+
+            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+            const starField = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(starField);
+
+            // 添加一些较亮的星星
+            const brightStarsGeometry = new THREE.BufferGeometry();
+            const brightStarsMaterial = new THREE.PointsMaterial({
+                color: 0xFFFFFF,
+                size: 0.2,
+                transparent: true,
+                opacity: 0.9,
+                sizeAttenuation: true
+            });
+
+            const brightStarsVertices = [];
+            for(let i = 0; i < 100; i++) {
+                const x = (Math.random() - 0.5) * 200;
+                const y = (Math.random() - 0.5) * 200;
+                const z = (Math.random() - 0.5) * 200;
+                brightStarsVertices.push(x, y, z);
+            }
+
+            brightStarsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(brightStarsVertices, 3));
+            const brightStarField = new THREE.Points(brightStarsGeometry, brightStarsMaterial);
+            scene.add(brightStarField);
+
+            // 添加星星闪烁动画
+            function animateStars() {
+                brightStarsMaterial.opacity = 0.5 + Math.sin(Date.now() * 0.002) * 0.5;
+                requestAnimationFrame(animateStars);
+            }
+            animateStars();
+
+            return { starField, brightStarField };
+        }
+
+        // 在初始化场景后立即调用
+        const starBackground = createStarField();
+
+        // 修改动画循环函数，添加星空旋转
+        function animate() {
+            requestAnimationFrame(animate);
+            earth.rotation.y += 0.001;
+            
+            // 添加缓慢的星空旋转
+            starBackground.starField.rotation.y += 0.0001;
+            starBackground.brightStarField.rotation.y += 0.0001;
+            
+            renderer.render(scene, camera);
+        }
         // 创建地球
         const earthGeometry = new THREE.SphereGeometry(5, 32, 32);
         const earthMaterial = new THREE.MeshPhongMaterial({
@@ -28,45 +174,55 @@
         const earth = new THREE.Mesh(earthGeometry, earthMaterial);
         scene.add(earth);
 
-        // 在创建地球后，添加3D文字
-        const loader = new THREE.FontLoader();
-        loader.load('https://cdn.jsdelivr.net/npm/three/examples/fonts/optimer_regular.typeface.json', function(font) {
-            const textGeometry1 = new THREE.TextGeometry('Support Planet', {
-                font: font,
-                size: 1,
-                height: 0.2,
-                curveSegments: 12,
-                bevelEnabled: false
-            });
+        // // 在创建地球后，添加3D文字
+        // const loader = new THREE.FontLoader();
+        // // loader.load('https://cdn.jsdelivr.net/npm/three/examples/fonts/optimer_regular.typeface.json', function(font) {
+        // loader.load('https://cdn.jsdelivr.net/gh/tengbao/vanta/vendor/three.r92.min.js',function(font){
+        //     const textGeometry1 = new THREE.TextGeometry('Supportive Sphere', {
+        //         font: font,
+        //         size: 1,
+        //         height: 0.2,
+        //         curveSegments: 12,
+        //         bevelEnabled: false
+        //     });
+
+        //     const textGeometry2 = new THREE.TextGeometry('支持星球', {
+        //         font: font,
+        //         size: 1,
+        //         height: 0.2,
+        //         curveSegments: 12,
+        //         bevelEnabled: false
+        //     });
+                        
+        //     const textMaterial1 = new THREE.MeshPhongMaterial({ 
+        //         color: 0x00ffff,
+        //         emissive: 0x00ffff,
+        //         emissiveIntensity: 0.5
+        //     });
+
+        //     const textMaterial2 = new THREE.MeshPhongMaterial({ 
+        //         color: 0x00ffff,
+        //         emissive: 0x00ffff,
+        //         emissiveIntensity: 0.5
+        //     });
             
-            // 创建HTML元素显示中文
-            const textDiv = document.createElement('div');
-            textDiv.style.position = 'fixed';
-            textDiv.style.top = '110px';
-            textDiv.style.width = '100%';
-            textDiv.style.textAlign = 'center';
-            textDiv.style.color = '#00ffff';
-            textDiv.style.fontSize = '42px';
-            textDiv.style.textShadow = '0 0 10px #00ffff';
-            textDiv.style.zIndex = '1000';
-            textDiv.innerHTML = '支持星球';
-            document.body.appendChild(textDiv);
+        //     const textMesh1 = new THREE.Mesh(textGeometry1, textMaterial1);
+        //     const textMesh2 = new THREE.Mesh(textGeometry2, textMaterial2);
             
-            const textMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x00ffff,
-                emissive: 0x00ffff,
-                emissiveIntensity: 0.5
-            });
+        //     textGeometry1.computeBoundingBox();
+        //     const centerOffset1 = -0.5 * (textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x);
+        //     textGeometry2.computeBoundingBox();
+        //     const centerOffset2 = -0.5 * (textGeometry2.boundingBox.max.x - textGeometry2.boundingBox.min.x);
+
+        //     textMesh1.position.set(centerOffset1, 9, 0);
+        //     textMesh2.position.set(centerOffset2, 7, 0);
             
-            const textMesh1 = new THREE.Mesh(textGeometry1, textMaterial);
-            
-            textGeometry1.computeBoundingBox();
-            const centerOffset1 = -0.5 * (textGeometry1.boundingBox.max.x - textGeometry1.boundingBox.min.x);
-            
-            textMesh1.position.set(centerOffset1, 9, 0);
-            
-            scene.add(textMesh1);
-        });
+        //     scene.add(textMesh1);
+        //     scene.add(textMesh2);
+        // });
+
+        // 删除原来的3D文字加载部分，替换为HTML文字
+        
 
         // 添加环境光和平行光
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
@@ -86,7 +242,7 @@
             canvas.height = texture.image.height;
             context.drawImage(texture.image, 0, 0);
             
-            const pointsCount = 50;
+            const pointsCount = 99;
             let attempts = 0;
             const maxAttempts = 1000;
             
@@ -163,64 +319,7 @@
             // 在所有点创建完成后，启动闪烁效果
             flashRandomPoints();
         });
-        // // 创建弧线
-        // function createArcLine(startPoint, endPoint) {
-        //     const points = [];
-        //     const startWorldPos = startPoint.getWorldPosition(new THREE.Vector3());
-        //     const endWorldPos = endPoint.getWorldPosition(new THREE.Vector3());
-        //     const midPoint = new THREE.Vector3().addVectors(startWorldPos, endWorldPos).multiplyScalar(0.5);
-        //     midPoint.normalize().multiplyScalar(7);
-
-        //     for(let i = 0; i <= 20; i++) {
-        //         const t = i / 20;
-        //         const point = new THREE.Vector3();
-        //         point.x = startWorldPos.x * (1 - t) * (1 - t) + midPoint.x * 2 * (1 - t) * t + endWorldPos.x * t * t;
-        //         point.y = startWorldPos.y * (1 - t) * (1 - t) + midPoint.y * 2 * (1 - t) * t + endWorldPos.y * t * t;
-        //         point.z = startWorldPos.z * (1 - t) * (1 - t) + midPoint.z * 2 * (1 - t) * t + endWorldPos.z * t * t;
-        //         points.push(point);
-        //     }
-
-        //     const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-        //     const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ffff });
-        //     return new THREE.Line(lineGeometry, lineMaterial);
-        // }
-
-        // // 动画函数
-        // let currentPointIndex = 0;
-        // const activeLines = new Set();//用于跟踪活动的线条
-
-        // function animateConnection() {
-        //     if (points.length < 2) return;
-            
-        //     const startPoint = points[currentPointIndex];
-        //     const nextPointIndex = (currentPointIndex + 1) % points.length;
-        //     const endPoint = points[nextPointIndex];
-
-        //     const arcLine = createArcLine(startPoint, endPoint);
-        //     earth.add(arcLine);
-        //     activeLines.add(arcLine);
-
-        //     gsap.to(endPoint.material.color, {
-        //         r: 1,
-        //         g: 0,
-        //         b: 0,
-        //         duration: 0.5,
-        //         yoyo: true,
-        //         repeat: 1
-        //     });
-
-        //     setTimeout(() => {
-        //         if (activeLines.zise > 3){
-        //             const oldestLine = Array.from(activeLines)[0];
-        //             earth.remove(oldestLine);
-        //             activeLines.delete(oldestLine);
-        //         }
-        //     }, 2000);
-
-        //     currentPointIndex = nextPointIndex;
-        //     setTimeout(animateConnection, 2000); //缩短动画间隔以便看到更多重叠的线条
-        // }
-
+        
         // 设置相机位置
         camera.position.z = 15;
 
