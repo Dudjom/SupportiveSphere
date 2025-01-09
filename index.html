@@ -48,14 +48,14 @@
     <div style="
         position: fixed;
         left: 50px;
-        top: 50%;
+        top: 70%;
         transform: translateY(-50%);
         color: #00ffff;
         text-shadow: 0 0 10px #00ffff;
         z-index: 1000;
         text-align: right;
     ">
-        <h3 style="margin-bottom: 20px; font-size: 18px;">加入我们的社区<br>为他人提供允许与支持</h3>
+        <h3 style="margin-bottom: 20px; font-size: 22px;">加入我们的社区<br>为他人提供允许与支持</h3>
         <a href="https://discord.gg/" class="social-link" target="_blank">
             <i class="fab fa-discord social-icon"></i>
             <span>Discord</span>
@@ -64,14 +64,14 @@
     <div style="
         position: fixed;
         right: 50px;
-        top: 50%;
+        top: 70%;
         transform: translateY(-50%);
         color: #00ffff;
         text-shadow: 0 0 10px #00ffff;
         z-index: 1000;
         text-align: left;
     ">
-        <h3 style="margin-bottom: 20px; font-size: 18px;">通过媒体了解我们更多</h3>
+        <h3 style="margin-bottom: 20px; font-size: 22px;">通过媒体了解我们更多</h3>
         <a href="https://youtube.com/" class="social-link" target="_blank">
             <i class="fab fa-youtube social-icon"></i>
             <span>YouTube频道</span>
@@ -100,9 +100,9 @@
             const starsGeometry = new THREE.BufferGeometry();
             const starsMaterial = new THREE.PointsMaterial({
                 color: 0xFFFFFF,
-                size: 0.1,
+                size: 0.15,
                 transparent: true,
-                opacity: 0.8,
+                opacity: 0.9,
                 sizeAttenuation: true
             });
 
@@ -122,14 +122,14 @@
             const brightStarsGeometry = new THREE.BufferGeometry();
             const brightStarsMaterial = new THREE.PointsMaterial({
                 color: 0xFFFFFF,
-                size: 0.2,
+                size: 0.3,
                 transparent: true,
-                opacity: 0.9,
+                opacity: 1.0,
                 sizeAttenuation: true
             });
 
             const brightStarsVertices = [];
-            for(let i = 0; i < 100; i++) {
+            for(let i = 0; i < 200; i++) {
                 const x = (Math.random() - 0.5) * 200;
                 const y = (Math.random() - 0.5) * 200;
                 const z = (Math.random() - 0.5) * 200;
