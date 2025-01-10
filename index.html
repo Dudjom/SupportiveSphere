@@ -66,7 +66,7 @@
             </a>
         </div>
         <div style="display: flex; justify-content: flex-end;">
-            <a href="https://www.kookapp.cn/" class="social-link" target="_blank">
+            <a href="https://www.kook.vip/1Km2ja" class="social-link" target="_blank">
                 <i class="fab fa-kook social-icon"></i>
                 <span>Kook</span>
             </a>
@@ -331,6 +331,66 @@
             flashRandomPoints();
         });
         
+        // 创建流星效果
+        function createMeteor() {
+            // 创建流星几何体
+            const meteorGeometry = new THREE.BufferGeometry();
+            const meteorMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff,
+                opacity: 0.8,
+                transparent: true
+            });
+
+            // 随机生成流星起点和终点
+            const startPoint = new THREE.Vector3(
+                (Math.random() - 0.5) * 200,
+                (Math.random() * 100) + 50,
+                (Math.random() - 0.5) * 200
+            );
+            const endPoint = new THREE.Vector3(
+                startPoint.x - 20 - Math.random() * 30,
+                startPoint.y - 20 - Math.random() * 30,
+                startPoint.z
+            );
+
+            const points = [startPoint, endPoint];
+            meteorGeometry.setFromPoints(points);
+            const meteor = new THREE.Line(meteorGeometry, meteorMaterial);
+
+            // 添加到场景
+            scene.add(meteor);
+
+            // 创建动画
+            gsap.to(meteor.material, {
+                opacity: 0,
+                duration: 1,
+                onComplete: () => {
+                    scene.remove(meteor);
+                    createMeteor();
+                }
+            });
+
+            // 移动流星
+            gsap.to(meteor.position, {
+                x: '-=30',
+                y: '-=30',
+                duration: 1,
+                ease: 'none'
+            });
+        }
+
+        // 初始化多个流星
+        function initMeteors() {
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createMeteor();
+                }, i * 3000); // 每3秒创建一个新流星
+            }
+        }
+
+        // 在场景初始化后调用
+        initMeteors();
+
         // 设置相机位置
         camera.position.z = 15;
 
@@ -338,6 +398,8 @@
         function animate() {
             requestAnimationFrame(animate);
             earth.rotation.y += 0.001;
+            starBackground.starField.rotation.y += 0.0001;
+            starBackground.brightStarField.rotation.y += 0.0001;
             renderer.render(scene, camera);
         }
 
